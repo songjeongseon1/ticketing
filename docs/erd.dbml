@@ -1,0 +1,71 @@
+Table member {
+  id bigint [pk, increment]
+  email varchar(100) [unique, not null]
+  password varchar(255) [not null, note: 'BCrypt 해시']
+  role varchar(20) [not null, note: 'USER / ADMIN']
+  created_at datetime [not null]
+}
+
+Table performance {
+  id bigint [pk, increment]
+  title varchar(200) [not null]
+  venue varchar(100) [not null]
+  open_at datetime [not null, note: '예매 오픈 시각']
+  created_at datetime [not null]
+}
+
+Table schedule {
+  id bigint [pk, increment]
+  performance_id bigint [not null, ref: > performance.id]
+  start_at datetime [not null]
+  created_at datetime [not null]
+}
+
+Table seat_grade {
+  id bigint [pk, increment]
+  performance_id bigint [not null, ref: > performance.id]
+  name varchar(20) [not null, note: 'VIP, R, S']
+  price int [not null]
+  indexes { (performance_id, name) [unique] }
+}
+
+Table seat {
+  id bigint [pk, increment]
+  schedule_id bigint [not null, ref: > schedule.id]
+  seat_grade_id bigint [not null, ref: > seat_grade.id]
+  seat_no varchar(10) [not null, note: 'A-12']
+  status varchar(20) [not null, note: 'AVAILABLE / HELD / RESERVED']
+  held_by bigint [null, ref: > member.id]
+  held_until datetime [null]
+  version bigint [not null, default: 0]
+  indexes {
+    (schedule_id, seat_no) [unique]
+    (schedule_id, held_by)
+  }
+}
+
+Table reservation {
+  id bigint [pk, increment]
+  member_id bigint [not null, ref: > member.id]
+  schedule_id bigint [not null, ref: > schedule.id]
+  seat_id bigint [not null, ref: > seat.id]
+  status varchar(20) [not null, note: 'PENDING / CONFIRMED / CANCELED / EXPIRED']
+  price int [not null]
+  created_at datetime [not null]
+  confirmed_at datetime [null]
+  canceled_at datetime [null]
+
+  Note: '''
+  active_seat_id, active_member_id = PENDING/CONFIRMED일 때만 값이 생기는 생성 컬럼
+  UNIQUE(active_seat_id), UNIQUE(schedule_id, active_member_id) → Flyway V1 참고
+  '''
+}
+
+Table payment {
+  id bigint [pk, increment]
+  reservation_id bigint [not null, ref: > reservation.id]
+  idempotency_key varchar(64) [unique, not null]
+  amount int [not null]
+  status varchar(20) [not null, note: 'PENDING / SUCCESS / FAILED']
+  created_at datetime [not null]
+}
