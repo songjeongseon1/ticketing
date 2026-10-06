@@ -1,0 +1,26 @@
+# Gradle / Java
+.gradle/
+build/
+out/
+*.class
+
+# IDE
+.idea/
+*.iml
+.vscode/
+
+# Node / React
+node_modules/
+dist/
+
+# 환경변수, 비밀값 — 절대 커밋하지 않기
+.env
+*.env
+application-local.yml
+
+# OS
+.DS_Store
+Thumbs.db
+
+# 로그
+*.log
